@@ -82,7 +82,7 @@ class RagnaCog(commands.Cog):
     """
 
     @commands.command(aliases=['ro'], help='summons monster')
-    async def oi(self, ctx):
+    async def ragnarok(self, ctx):
         ro = read_json('ro_ids.json')
         ids, mob = random.choice(list(ro.items()))
         print(mob)
@@ -108,7 +108,9 @@ class RagnaCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Bot or wrong channel do nothing
-        if message.author == self.bot.user or message.content[1:].startswith("spawn"):  # or message.channel == CHANNEL_IDs:
+        if str(message.author.id) in bot_id:  # or message.channel == CHANNEL_IDs:
+            if message.content[1:].startswith("spawn"):
+                return
             return
 
         # # Pokemon is going to be found
@@ -122,6 +124,8 @@ class RagnaCog(commands.Cog):
         #         pass
 
         if self.appeared:
+            print(bot_id)
+            print(message.author.id)
             await self.check_capture(message)
         else:
             print('pass')
