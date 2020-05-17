@@ -1,0 +1,11 @@
+a = ['Yerrussallem', 'Bloody', 'Uban', 'Kakikaku', 'Malapetaka', 'Samurai', 'Perisai', 'Zorro', 'Tatank', 'Silau',
+         'Biskuat', 'Takkuat', 'Kemiri', 'Bunga', 'Indah', 'Kemangi', 'Lalapan', 'Kelelep', 'Python', 'Senjatamerika',
+         'Mobiljerman', 'Spatubelanda', 'Ontaarab', 'Terracotta', 'Messes', 'Ulunu', 'Xiangxialxiao', 'Kolakoppotekno',
+         'Sudibyo', 'Sikil', 'Kelakon', 'Renda', 'Slengkat', 'Sikut', 'Wasser', 'Lambe', 'Lindasmu', 'Kentupat',
+         'Zarazakraito', 'Slimfit', 'Tulang', 'Wayan', 'Prostat', 'Dableg', 'Jancok', 'Jingkrak', 'Felix', 'Romeo',
+         'King Kong', 'Singkong', 'Dadang', 'Tresno', 'Sikalap', 'Slengkat', 'Sudibyo', 'Bagus', 'Libra', 'Cakro',
+         'Cahyo', 'Hossana', 'Yahwe', 'Bethlehem', 'Gideon', 'Golgotta', 'Zefa', 'Jr.', 'Zakeus', 'Chiquitta',
+         'Cubitus', 'Vannesssya', 'Mantova', 'Charank', 'Lubing', 'Babu', 'Tapioca', 'Miller', 'Prontera', 'Bangsat',
+         'Bismillah', 'Peptina', 'Mijon', 'Samurai', 'Shinobi', 'Cross', 'Eiffel', 'Dermulen', 'Aduhai', 'Leher',
+         'Paha', 'Cilukba', 'Melson', 'Dermulen', 'The', 'Lourdes', 'Teguh', 'Eiffel', 'Oyasuminasai', 'Assassin',
+         'Baby', 'Channel', 'Nintendo', 'Acid', 'Geneticist', 'Aduhai', 'Piutang', 'Hitam', 'Tak']
