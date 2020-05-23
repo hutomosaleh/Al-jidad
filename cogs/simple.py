@@ -173,16 +173,49 @@ Commands ======================================================================
 """
 
 
-class MainCog(commands.Cog):
-    
+class MainCog(commands.Cog, name='Main Commands'):
+
     def __init__(self, bot):
         self.bot = bot
-
 
     @commands.command(aliases=['version'], help='cek trakhir kali update')
     async def update(self, ctx):
         await ctx.send('Last update: 14/05/2020 23:10 CET')
 
+    @commands.command(aliases=['kadoin'], help='kasih kado random')
+    async def gift(self, ctx, recipient):
+        filename = random.choice(os.listdir('files/gifts'))
+        pic = 'files/gifts/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title='Yeayy dapet kado!!', description=' ', color=16580705)
+        embed.add_field(name='Dengan kasih sayang', value=str(ctx.message.author)[:-5], inline=True)
+        embed.add_field(name='Untuk yang tercinta', value=recipient, inline=True)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(help='a lil scare to wake u up')
+    async def spook(self, ctx):
+        filename = random.choice(os.listdir('files/spook'))
+        pic = 'files/spook/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed()
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(aliases=['rumah'], help='rumah impianmu')
+    async def house(self, ctx):
+        if str(ctx.message.author.id) in ['690210811003666435', '690209627907948612']:
+            folders = ['spooky']
+        else:
+            folders = ['nice']
+        directory = random.choice(folders)
+        filename = random.choice(os.listdir('files/houses/{}'.format(directory)))
+        pic = 'files/houses/{}/{}'.format(directory, filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title='Rumah yang cocok untukmu', description=' ', color=16580705)
+        embed.add_field(name='Milik', value=ctx.message.author, inline=True)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
 
     @commands.command(aliases=['main', 'youtube'], help='dengerin video youtube')
     async def mainin(self, ctx, what, *argv):
@@ -228,12 +261,10 @@ class MainCog(commands.Cog):
         await ctx.voice_client.disconnect()
         os.remove(vidname)
 
-
     @commands.command(aliases=['pls', 'fun'], help='gifs gifs gifs')
     async def gif(self, ctx, what):
         gif = await search_gifs(what)
         await ctx.send(gif)
-
 
     @commands.command(help='Saran film')
     async def film(self, ctx, opt=None):
@@ -243,7 +274,6 @@ class MainCog(commands.Cog):
             await ctx.send('Sp00ky film for u: {}'.format(random.choice(horror)))
         else:
             await ctx.send('I recommend: {}'.format(random.choice(all_films)))
-
 
     @commands.command(name="nama", aliases=['anakku'], help='memberimu sebuah nama anak')
     async def nama(self, ctx, opt=None):
@@ -256,8 +286,11 @@ class MainCog(commands.Cog):
         easter = random.randint(1, 1000)
         userid = '<@{}>'.format(ctx.message.author.id)
         Lastname = ''
-        if userid in nama_belakang:
-            Lastname = nama_belakang[userid]
+        a = random.randint(1, 5)
+        a = 1
+        if a == 1:
+            if userid in nama_belakang:
+                Lastname = nama_belakang[userid]
         if easter == 500:
             await ctx.send('WIS KESEL AKU CUK, KEAKEAN NYROCOS CANGKEM MU')
             await ctx.send('BANGSAT')
@@ -265,7 +298,6 @@ class MainCog(commands.Cog):
             await ctx.message.guild.leave()
         else:
             await ctx.send('Nama anakmu ' + c[0] + ' ' + c[1] + ' ' + Lastname)
-
 
     @commands.command(name='ramal', help='ramalan / kewajibanmu hari ini')
     async def ramal(self, ctx):
@@ -280,7 +312,6 @@ class MainCog(commands.Cog):
             msg = ['buruk', 'baik', 'sangat baik', 'sangat buruk', 'tidak ada']
             message = 'Keberuntunganmu hari ini ' + random.choice(msg)
         await ctx.send(message)
-
 
     @commands.command(aliases=['stock', 'saham'], help='liat saham di marketwatch')
     async def cari(self, ctx, what, *argv):
@@ -325,6 +356,8 @@ class MainCog(commands.Cog):
 
             try:
                 reaction, user = await self.bot.wait_for('reaction_add', check=check, timeout=60)
+                print(reaction)
+                print(user)
             except asyncio.TimeoutError:
                 await ctx.send("Kelamaan milihnya")
             else:
@@ -339,16 +372,13 @@ class MainCog(commands.Cog):
                 else:
                     await ctx.send('\n\nNih: ' + url + c)
 
-
     @commands.command(name='bilangapa', help='coba aja')
     async def bilangapa(self, ctx):
         await ctx.send('makasih kk')
 
-
     @commands.command(aliases=['chess'], help='buat main catur')
     async def catur(self, ctx):
         await ctx.send('https://www.chess.com/home')
-
 
     @commands.command(name='google', help='buka link google')
     async def google(self, ctx, what, *argv):
@@ -359,7 +389,6 @@ class MainCog(commands.Cog):
             msg += '+' + str(i)
         await ctx.send(msg)
 
-
     @commands.command(name='dadu', help='main dadu')
     async def roll(self, ctx, number_of_dice: int, number_of_sides: int):
         dice = [
@@ -367,7 +396,6 @@ class MainCog(commands.Cog):
             for _ in range(number_of_dice)
         ]
         await ctx.send(', '.join(dice))
-
 
     @commands.command(name='cuk', aliases=['jancok', 'bangsat'], pass_context=True, help='ngegas balik')
     async def cuk(self, ctx):
@@ -382,20 +410,17 @@ class MainCog(commands.Cog):
         await ctx.send(message)
         # await ctx.message.author.edit(nick=name)
 
-
     @commands.command(name='sini', aliases=['rene'], pass_context=True, help='ramein voice chat')
     async def join(self, ctx):
         if ctx.message.author.voice:
             channel = ctx.message.author.voice.channel
             await channel.connect()
 
-
     @commands.command(name='pergi', aliases=['stop'], pass_context=True, help='ngusir al-jidad')
     async def leave(self, ctx):
         if ctx.message.author.voice:
             server = ctx.message.guild.voice_client
             await server.disconnect()
-
 
     @commands.command(name='brpsih', help='ngitung pertambahan, perkalian, pembagian')
     async def calc(self, ctx, no1: int, arg: str, no2: int):
@@ -413,7 +438,6 @@ class MainCog(commands.Cog):
             else:
                 result = round(no1 / no2, 4)
         await ctx.send(str(result) + ' ' + bego)
-
 
     @commands.command(
         name='jidad',
@@ -446,29 +470,8 @@ class MainCog(commands.Cog):
         else:
             await ctx.send('ape')
 
-
-    @commands.command(name='embeds')
-    @commands.guild_only()
-    async def example_embed(self, ctx):
-        """A simple command which showcases the use of embeds.
-        Have a play around and visit the Visualizer."""
-
-        embed = discord.Embed(title='Example Embed',
-                              description='Showcasing the use of Embeds...\nSee the visualizer for more info.',
-                              colour=0x98FB98)
-        embed.set_author(name='MysterialPy',
-                         url='https://gist.github.com/MysterialPy/public',
-                         icon_url='http://i.imgur.com/ko5A30P.png')
-        embed.set_image(url='https://cdn.discordapp.com/attachments/84319995256905728/252292324967710721/embed.png')
-
-        embed.add_field(name='Embed Visualizer', value='[Click Here!](https://leovoel.github.io/embed-visualizer/)')
-        embed.add_field(name='Command Invoker', value=ctx.author.mention)
-        embed.set_footer(text='Made in Python with discord.py@rewrite', icon_url='http://i.imgur.com/5BFecvA.png')
-
-        await ctx.send(content='**A simple Embed for discord.py@rewrite in cogs.**', embed=embed)
-
-
     @commands.command(name='restart')
+    @commands.has_role('admin')
     async def cmd_restart(self, ctx, message=None):
         await ctx.channel.send('Restarting...')
         await self.bot.close()
