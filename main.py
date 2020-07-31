@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GIPHY_TOKEN = os.getenv('GIPHY_TOKEN')
 
 bot = commands.Bot(command_prefix=['oi ', 'Oi ', 'OI ', 'jid '])
 
-startup_extensions = ['cogs.simple', 'cogs.ragnarok']
+startup_extensions = ['cogs.simple', 'cogs.ragnarok', 'cogs.pokemon', 'cogs.apps']
 
 
 @bot.event
