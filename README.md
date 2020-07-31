@@ -1,2 +1,2 @@
 # Al-jidad
-A simple Discord BOT
+Our very own personal discord bot
