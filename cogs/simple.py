@@ -3,8 +3,8 @@ import os
 import sys
 import json
 import random
-import discord
 import asyncio
+import discord
 import youtube_dl
 import giphy_client
 from giphy_client.rest import ApiException
@@ -17,10 +17,7 @@ from bs4 import BeautifulSoup
 
 load_dotenv()
 GIPHY_TOKEN = os.getenv('GIPHY_TOKEN')
-
 api_instance = giphy_client.DefaultApi()
-
-players = {}
 
 '''
     Other functions
@@ -28,7 +25,7 @@ players = {}
 
 
 def txt_to_array(filename):
-    file = 'files/' + filename
+    file = 'files/txt/' + filename
     with open(file, 'r') as f:
         x = f.readlines()
         d = []
@@ -36,13 +33,6 @@ def txt_to_array(filename):
             c = x[i].replace('\n', '')
             d.append(c)
     return d
-
-
-def read_json(filename):
-    file = 'files/' + filename
-    with open(file, 'r') as f:
-        ro = json.load(f)
-    return ro
 
 
 """
@@ -107,9 +97,7 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
-
         self.data = data
-
         self.title = data.get('title')
         self.url = data.get('url')
 
@@ -174,13 +162,15 @@ Commands ======================================================================
 
 
 class MainCog(commands.Cog, name='Main Commands'):
-
+    
     def __init__(self, bot):
         self.bot = bot
 
+
     @commands.command(aliases=['version'], help='cek trakhir kali update')
-    async def update(self, ctx):
+    async def update(self, ctx, keyword):
         await ctx.send('Last update: 14/05/2020 23:10 CET')
+
 
     @commands.command(aliases=['kadoin'], help='kasih kado random')
     async def gift(self, ctx, recipient):
@@ -202,8 +192,8 @@ class MainCog(commands.Cog, name='Main Commands'):
         embed.set_image(url='attachment://{}'.format(filename))
         await ctx.send(file=file, embed=embed)
 
-    @commands.command(aliases=['rumah'], help='rumah impianmu')
-    async def house(self, ctx):
+    @commands.command(aliases=['house'], help='rumah impianmu')
+    async def rumah(self, ctx):
         if str(ctx.message.author.id) in ['690210811003666435', '690209627907948612']:
             folders = ['spooky']
         else:
@@ -213,7 +203,46 @@ class MainCog(commands.Cog, name='Main Commands'):
         pic = 'files/houses/{}/{}'.format(directory, filename)
         file = discord.File(pic, filename=filename)
         embed = discord.Embed(title='Rumah yang cocok untukmu', description=' ', color=16580705)
-        embed.add_field(name='Milik', value=ctx.message.author, inline=True)
+        embed.add_field(name='Milik', value=str(ctx.message.author)[:-5], inline=True)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(aliases=['room'], help='kamar yang cocok untukmu')
+    async def kamar(self, ctx):
+        filename = random.choice(os.listdir('files/oi kamar'))
+        pic = 'files/oi kamar/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title='Kamar yang cocok untukmu', description=' ', color=16580705)
+        embed.add_field(name='Milik', value=str(ctx.message.author)[:-5], inline=True)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(help='cute animals')
+    async def kyot(self, ctx):
+        filename = random.choice(os.listdir('files/oi kyot'))
+        pic = 'files/oi kyot/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title=' ', description=' ', color=16580705)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(aliases=['binatang'], help='summon your inner creature')
+    async def creature(self, ctx):
+        filename = random.choice(os.listdir('files/oi creature'))
+        pic = 'files/oi creature/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title='Your inner spirit...', description=' ', color=16580705)
+        # embed.add_field(name=' ', value=str(ctx.message.author)[:-5] + "", inline=True)
+        embed.set_image(url='attachment://{}'.format(filename))
+        await ctx.send(file=file, embed=embed)
+
+    @commands.command(aliases=['makan'], help='hidangan spesial untukmu')
+    async def food(self, ctx):
+        filename = random.choice(os.listdir('files/oi food'))
+        pic = 'files/oi food/{}'.format(filename)
+        file = discord.File(pic, filename=filename)
+        embed = discord.Embed(title='Selamat menikmati', description=' ', color=16580705)
+        embed.add_field(name='Milik', value=str(ctx.message.author)[:-5], inline=True)
         embed.set_image(url='attachment://{}'.format(filename))
         await ctx.send(file=file, embed=embed)
 
@@ -298,79 +327,6 @@ class MainCog(commands.Cog, name='Main Commands'):
             await ctx.message.guild.leave()
         else:
             await ctx.send('Nama anakmu ' + c[0] + ' ' + c[1] + ' ' + Lastname)
-
-    @commands.command(name='ramal', help='ramalan / kewajibanmu hari ini')
-    async def ramal(self, ctx):
-        r = random.randint(1, 2)
-        if r == 2:
-            msg = ['jangan nyentuh air', 'harus makan sambel', 'harus lari pagi', 'jangan lupa masak',
-                   'harus buka facebook']
-            msg2 = ['mimpi digigit melsson', 'ketemu kecoa', 'diare', 'keselek ludah', 'kepentok ujung pintu', 'panuan',
-                    'kesikut orang']
-            message = 'Hari ini ' + random.choice(msg) + ' kalau ngga ntar ' + random.choice(msg2)
-        else:
-            msg = ['buruk', 'baik', 'sangat baik', 'sangat buruk', 'tidak ada']
-            message = 'Keberuntunganmu hari ini ' + random.choice(msg)
-        await ctx.send(message)
-
-    @commands.command(aliases=['stock', 'saham'], help='liat saham di marketwatch')
-    async def cari(self, ctx, what, *argv):
-        arg = []
-        url = 'https://www.marketwatch.com/investing/stock/'
-        web = 'https://www.marketwatch.com/tools/quotes/lookup.asp?lookup={}'.format(what)
-        for i in argv:
-            arg.append(i)
-            web += '+' + str(i)
-        raw_html = simple_get(web)
-        soup = BeautifulSoup(raw_html, 'lxml')
-        a = soup.find_all('td', attrs={'class': 'bottomborder'})
-        txtlist = []
-        code = []
-        name = []
-        if a is None:
-            await ctx.send('Gaada hasilnya')
-        else:
-            for v in a:
-                txt = v.text
-                txtlist.append(txt)
-            for i in range(0, len(txtlist), 3):
-                code.append(txtlist[i])
-            for i in range(1, len(txtlist), 3):
-                name.append(txtlist[i])
-            if len(name) < 4:
-                kurang = True
-                for i in range(4):
-                    name.append('')
-                    code.append('')
-            msg = 'Hasil 3 pertama: \n\n' \
-                  '{}\n{}\n{}\n'.format(name[0], name[1], name[2])
-            await ctx.send(msg)
-            message = await ctx.send("\n\n" + "Mau yg mana? \n\n")
-            await message.add_reaction('\U00000031\U0000fe0f\U000020e3')
-            await message.add_reaction('\U00000032\U0000fe0f\U000020e3')
-            await message.add_reaction('\U00000033\U0000fe0f\U000020e3')
-
-            def check(reac, usr):
-                return str(reac.emoji) in ['\U00000031\U0000fe0f\U000020e3', '\U00000032\U0000fe0f\U000020e3',
-                                           '\U00000033\U0000fe0f\U000020e3'] and usr != self.bot.user
-
-            try:
-                reaction, user = await self.bot.wait_for('reaction_add', check=check, timeout=60)
-                print(reaction)
-                print(user)
-            except asyncio.TimeoutError:
-                await ctx.send("Kelamaan milihnya")
-            else:
-                if str(reaction.emoji) == '\U00000031\U0000fe0f\U000020e3':
-                    c = code[0]
-                elif str(reaction.emoji) == '\U00000032\U0000fe0f\U000020e3':
-                    c = code[1]
-                elif str(reaction.emoji) == '\U00000033\U0000fe0f\U000020e3':
-                    c = code[2]
-                if c == '':
-                    await ctx.send('Barusan milih yg gaada')
-                else:
-                    await ctx.send('\n\nNih: ' + url + c)
 
     @commands.command(name='bilangapa', help='coba aja')
     async def bilangapa(self, ctx):
@@ -470,12 +426,14 @@ class MainCog(commands.Cog, name='Main Commands'):
         else:
             await ctx.send('ape')
 
+
     @commands.command(name='restart')
     @commands.has_role('admin')
     async def cmd_restart(self, ctx, message=None):
         await ctx.channel.send('Restarting...')
         await self.bot.close()
         os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 
 def setup(bot):

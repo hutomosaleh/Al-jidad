@@ -4,23 +4,16 @@ import json
 import random
 import discord
 import asyncio
-import youtube_dl
-import giphy_client
-from datetime import time, datetime, timedelta
-from giphy_client.rest import ApiException
+import requests
 from discord.ext import commands
-from dotenv import load_dotenv
-from requests import get
-from requests.exceptions import RequestException
-from contextlib import closing
-from bs4 import BeautifulSoup
 
-bot_id = ['711125834244554774', '365975655608745985', '709880783325757610', '711927418176274454']
 directory = 'files/savefile/'
+RO_url = 'https://www.divine-pride.net/api/database/'
+RO_TOKEN = os.getenv('RO_TOKEN')
 
 
 def save_json(filename, file):
-    with open('{}'.format(directory)+filename, 'w') as f:
+    with open(directory + filename, 'w') as f:
         json.dump(file, f, indent=2, sort_keys=False)
 
 
@@ -30,8 +23,16 @@ def read_json(filename):
     return savefile
 
 
+def save_monster_data(mob_id):
+    mob_dir = 'files/RO/monsters_data/' + f'{mob_id}.json'
+    if not os.path.exists(mob_dir):
+        response = requests.get(RO_url + f'Monster/{mob_id}?apiKey={RO_TOKEN}')
+        with open(mob_dir, 'w') as f:
+            json.dump(response.json(), f, indent=2, sort_keys=False)
+        print('RO JSON File saved!')
 
-class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
+
+class RagnaCog(commands.Cog, name='\nRagnarok Commands'):
 
     def __init__(self, bot):
         self.bot = bot
@@ -45,14 +46,13 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
         Commands ==========================================================
     """
 
-    @commands.command(aliases=['ro', 'RO', 'Ro', 'rO', 'ragna'], help='goes on a quest')
+    @commands.command(aliases=['ro', 'RO', 'Ro', 'rO', 'ragna'], help='Go on a quest')
     async def quest(self, ctx):
         ro = read_json('ro_ids.json')
         ids, mob = random.choice(list(ro.items()))
         print(mob)
         hint = list(mob)
         channel = str(ctx.channel.id)
-        print(channel)
         for i in range(1, len(hint)):
             if hint[i] == ' ':
                 pass
@@ -61,17 +61,19 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
         hint = ''.join(hint)
         print(hint)
         embed = discord.Embed(title='A monster has appeared!', description='Kill it before it kills you!', color=15158332)
-        embed.set_image(url='https://cp.originsro.org/data/images/monsters/{}.gif'.format(ids))
         embed.add_field(name='Starts with the letter', value='\n`{}`'.format(hint), inline=True)
+        file = discord.File(f'files/RO/monsters/{ids}.gif', filename=f'{ids}.gif')
+        embed.set_image(url=f'attachment://{ids}.gif')
+        await ctx.send(file=file, embed=embed)
+        save_monster_data(ids)
         self.quest[channel] = {}
         self.quest[channel]["channel"] = int(channel)
         self.quest[channel]["monster"] = mob.lower()
         self.quest[channel]["summoner"] = ctx.message.author.id
         self.quest[channel]["tries"] = 5
-        await ctx.send(embed=embed)
 
     @commands.command(help='Shows your RO stats')
-    async def stats(self, ctx):
+    async def status(self, ctx):
         player = str(ctx.message.author.id)
         try:
             playerstats = self.stats[player]
@@ -85,14 +87,13 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
             # embed.add_field(name='\u200b', value='\u200b')  # invisible field to push the fields
             embed.add_field(name='Level: ', value='{}'.format(playerstats['level']), inline=True)
             embed.add_field(name='Exp: ', value='{}'.format(playerstats['exp']), inline=True)
-            # embed.add_field(name='\u200b', value='\u200b')
-            file = discord.File(f'files/RO/Job 1/1 {job} {gender}.gif', filename=f'0 nov {gender}.gif')
+            file = discord.File(f'files/RO/Job 1/1 {job} {gender}.gif', filename=f'0 {job} {gender}.gif')
             embed.set_image(url='attachment://{}'.format(f'0 {job} {gender}.gif'))
             await ctx.send(file=file, embed=embed)
         except KeyError:
             await ctx.send("You're not in the adventurers guild. Please register first!")
 
-    @commands.command(help='Registers your id in the adventurers guild')
+    @commands.command(help='Register yourself to the adventurers guild')
     async def register(self, ctx, name=None):
         if name is None:
             await ctx.send("Please include your name!")
@@ -117,7 +118,7 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
                 self.registration(ctx.message.author.id, name, gender)
                 await ctx.send(f"Congratulations {name}, you're an adventurer!")
 
-    @commands.command(help='Leave the adventurers guild for good!')
+    @commands.command(help='Leave the adventurers guild for good')
     async def leave(self, ctx):
         if str(ctx.author.id) in self.stats:
             message = await ctx.send("Are you completely sure about leaving us?")
@@ -141,8 +142,8 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
         else:
             await ctx.send("You're not even in the guild!")
 
-    @commands.command(aliases=["change"], help='Change your job!')
-    async def change_job(self, ctx):
+    @commands.command(aliases=["change"], help='Change your job')
+    async def jobchange(self, ctx):
         player = self.stats[str(ctx.author.id)]
         jobs = ['Swordsman', 'Acolyte', 'Archer', 'Merchant', 'Thief', 'Magician']
         number_emoji = ['%d\N{variation selector-16}\N{combining enclosing keycap}' % int(i+1) for i in range(6)]
@@ -174,14 +175,14 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
         else:
             await ctx.send("You're level is too low!")
 
-    @commands.command(help='Change your job!', hidden=True)
+    @commands.command(hidden=True)
     @commands.has_role('admin')
     async def levelup(self, ctx):
         self.stats[str(ctx.author.id)]['level'] += 10
         self.update_json()
         await ctx.send("You leveled up!")
 
-    @commands.command(help='Change your job!', hidden=True)
+    @commands.command(hidden=True)
     @commands.has_role('admin')
     async def print(self, ctx):
         print(self.stats)
@@ -265,7 +266,7 @@ class RagnaCog(commands.Cog, name='Ragnarok Commands \n'):
             player = self.stats[str(message.author.id)]
             exp = player["exp"]
             name = player["name"]
-            exp_gained = 200
+            exp_gained = 2000
             player["exp"] += exp_gained
             await message.channel.send('{} gained {} Exp!'.format(name, exp_gained))
             level = player["level"]
