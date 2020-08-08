@@ -5,11 +5,11 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv('DISCORD_TOKEN')  # environment variables
 
 bot = commands.Bot(command_prefix=['oi ', 'Oi ', 'OI ', 'jid '])
 
-startup_extensions = ['cogs.simple', 'cogs.ragnarok', 'cogs.pokemon', 'cogs.apps']
+startup_extensions = ['cogs.simple', 'cogs.ragnarok', 'cogs.pokemon', 'cogs.apps', 'cogs.podomoro']
 
 
 @bot.event
