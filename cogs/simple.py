@@ -7,6 +7,10 @@ import asyncio
 import discord
 import youtube_dl
 import giphy_client
+import requests
+import pandas as pd
+from io import StringIO
+from collections import defaultdict
 from giphy_client.rest import ApiException
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -16,8 +20,13 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 
 load_dotenv()
+
 GIPHY_TOKEN = os.getenv('GIPHY_TOKEN')
 api_instance = giphy_client.DefaultApi()
+gd_film = r"https://docs.google.com/spreadsheets/d/e/2PACX-1vQnT4GMCJ2QGVF7hLuvNVZdlziBMXijwRKT5InRfFLhNVO9lm8rprDIhjIRqrLqyczFNUrnTKHWNMJK/pub?output=csv"
+gd_game = r"https://docs.google.com/spreadsheets/d/e/2PACX-1vQqUAcn0YDwNc5ADJqiDeO02sO58aQMJGyAM-z-PB_8jvtylBMXsFgCqRs28tzqwsPJ5-_ALvYdqF8w/pub?output=csv"
+gd_flag = r"https://docs.google.com/spreadsheets/d/e/2PACX-1vQFaSUWgq4jU6QYq5Xr2PPcU_EVKWTQot8ARfnKLUSDMZZe6_jCTCz7Se_qrVyFjm4k8fmoFJqcPal-/pub?output=csv"
+gd_instrument = r"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8EdTnhLWN8CSTtnTjde2IBwQSPZw-E7KTROXp0rF0qai_L90tZMRnItB6v5aXvyTCjh64dpRF6kK1/pub?output=csv"
 
 '''
     Other functions
@@ -87,10 +96,10 @@ ffmpeg_options = {
     'options': '-vn'
 }
 
-nama_belakang = {'<@163320354662514688>': 'KW', '<@690190849182924859>': 'Tandya', '<@690210811003666435>': 'Muliawan',
+nama_belakang = {'<@163320354662514688>': 'Kusuma Wardhani', '<@690190849182924859>': 'Tandya', '<@690210811003666435>': 'Muliawan',
                  '<@690190783952715851>': 'Halim', '<@149466509926727682>': 'Angdjaja',
                  '<@691671675812708364>': 'Setiawan', '<@690209627907948612>': 'Muliawan',
-                 '<@325596713358458891>': 'Saleh'}
+                 '<@325596713358458891>': 'Saleh', '<@450770327686086656>': 'Agustin'}
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
@@ -164,7 +173,14 @@ Commands ======================================================================
 class MainCog(commands.Cog, name='Main Commands'):
     
     def __init__(self, bot):
+        self.db_trivia = bot.mongodb.trivia
         self.bot = bot
+        self.tebak_list = defaultdict(dict)
+        self.tebak_list['film'] = self.open_drive(gd_film)
+        self.tebak_list['game'] = self.open_drive(gd_game)
+        self.tebak_list['flag'] = self.open_drive(gd_flag)
+        self.tebak_list['instrument'] = self.open_drive(gd_instrument)
+        self.tebak_info = defaultdict(dict)
 
 
     @commands.command(aliases=['version'], help='cek trakhir kali update')
@@ -291,7 +307,9 @@ class MainCog(commands.Cog, name='Main Commands'):
         os.remove(vidname)
 
     @commands.command(aliases=['pls', 'fun'], help='gifs gifs gifs')
-    async def gif(self, ctx, what):
+    async def gif(self, ctx, what, *argv):
+        for arg in argv:
+            what += f"-{arg}"
         gif = await search_gifs(what)
         await ctx.send(gif)
 
@@ -395,10 +413,7 @@ class MainCog(commands.Cog, name='Main Commands'):
                 result = round(no1 / no2, 4)
         await ctx.send(str(result) + ' ' + bego)
 
-    @commands.command(
-        name='jidad',
-        pass_context=True, help='mainin coffin dance'
-    )
+    @commands.command(name='jidad', pass_context=True, help='mainin coffin dance')
     async def coffin(self, ctx, opt=None):
         # grab the user who sent the command
         user = ctx.message.author
@@ -426,6 +441,79 @@ class MainCog(commands.Cog, name='Main Commands'):
         else:
             await ctx.send('ape')
 
+    @commands.command(aliases=['guess'], help='A guessing game')
+    async def tebak(self, ctx, *args):
+        user = ctx.message.author.id
+        db = self.db_trivia.film
+        if len(args) == 0:
+            return await ctx.send("Specify what you want to guess! (film, game, am, flag)")
+
+        for identifier in args:
+            if identifier == 'am':
+                identifier = 'instrument'
+            await self.tebak_identifier(identifier, ctx)
+
+    async def tebak_identifier(self, identifier, ctx):
+        channel_id = ctx.channel.id
+        self.tebak_info[channel_id][identifier] = {'active': False, 'title': None}
+        filename = random.choice(os.listdir(f'files/oi tebak/{identifier}'))
+        pic = f'files/oi tebak/{identifier}/{filename}'
+        num = pic.split('.')[0].split('/')[-1]
+        if num[-1].isalpha():  # removes alphabet
+            num = num[:-1]
+        num = int(num)
+        embed = discord.Embed(title='Guess!', description=f"What {identifier} is this?", color=0x261A16)
+        file = discord.File(pic, filename=filename)
+        embed.set_image(url=f'attachment://{filename}')
+        self.tebak_info[channel_id][identifier]['active'] = True
+        await ctx.send(file=file, embed=embed)
+
+        # answer
+        title = r"{}".format(str(self.tebak_list[identifier].iloc[num - 1]))
+        print(title)
+        title = title.split('\n')[0].split('Title')[-1].split(' ')
+        print(title)
+        title_new = []
+        for i, val in enumerate(title):
+            if val != '':
+                title_new.append(val)
+        print(title)
+        title = ' '.join([str(elem) for elem in title_new])
+        title = title.replace(':', '').replace(' -', '').replace("'", '').replace("?", '').replace("-", '').replace("!", '')
+        self.tebak_info[channel_id][identifier]['title'] = title
+        print(title)
+
+    def open_drive(self, url):
+        r = requests.get(url)
+        data = r.content.decode('utf-8')
+        return pd.read_csv(StringIO(data), index_col=0)
+
+    async def add_points(self, message, channel, trivia):
+        print('adding points')
+        user = message.author.id
+        db = self.db_trivia.film
+        if not db.find_one({'user': user}):
+            db.insert_one({
+                'user': user,
+                'points': 0
+            })
+        old_point = db.find_one({'user': user})['points']
+        db.update_one(
+            {'user': user},
+            {"$set": {'points': old_point+1}}
+        )
+        if (old_point+1) % 10 == 0:
+            filename = random.choice(os.listdir('files/oi tebak/gift'))
+            pic = f'files/oi tebak/gift/{filename}'
+            embed = discord.Embed(title='Congratulations!', description="Here's your prize!", color=0x261A16)
+            file = discord.File(pic, filename=filename)
+            embed.set_image(url=f'attachment://{filename}')
+            await message.channel.send(file=file, embed=embed)
+        self.tebak_info[channel][trivia] = {'active': False, 'title': None}
+        return await message.channel.send(
+            f"{str(message.author).split('#')[0]} guessed it right! \n"
+            f"You now have {db.find_one({'user': user})['points']} Points!"
+        )
 
     @commands.command(name='restart')
     @commands.has_role('admin')
@@ -434,6 +522,32 @@ class MainCog(commands.Cog, name='Main Commands'):
         await self.bot.close()
         os.execl(sys.executable, sys.executable, *sys.argv)
 
+    @commands.command(name="jawab")
+    async def tebak_jawaban(self, ctx):
+        print(self.tebak_info)
+
+    """
+        Listeners ==========================================================
+    """
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        channel = message.channel.id
+        trivia = ['film', 'game', 'instrument', 'flag']
+        msg = message.content.lower()
+        msg = msg.replace(':', '').replace(' -', '').replace("'", '').replace("?", '').replace("-", '')
+        # Bot or wrong channel do nothing
+        if message.author.bot:  # or message.channel == CHANNEL_IDs:
+            return
+
+        try:
+            for i in trivia:
+                if self.tebak_info[channel][i]['active']:
+                    if self.tebak_info[channel][i]['title'].lower() == msg:
+                        return await self.add_points(message, channel, i)
+        except KeyError:
+            return
+        return
 
 
 def setup(bot):

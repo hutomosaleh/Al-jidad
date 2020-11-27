@@ -3,20 +3,16 @@ import os
 import asyncio
 from copy import deepcopy
 from datetime import datetime
-from pymongo import MongoClient
 from discord.ext import commands
 from dotenv import load_dotenv
 
-load_dotenv()
-TKN_MONGODB = os.getenv('MONGO_DB')
-client = MongoClient(TKN_MONGODB)
 
 
 class PomodoroCog(commands.Cog, name='\nPomodoro Commands'):
 
     def __init__(self, bot):
         self.bot = bot
-        self.db = client.pomodoro.log
+        self.db = bot.mongodb.pomodoro.log
         self.user = {}
 
     @commands.command(aliases=['pomodoro', 'belajar'], help='Personal pomodoro timer that logs your sessions!')

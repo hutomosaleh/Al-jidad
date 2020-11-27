@@ -41,6 +41,7 @@ class RagnaCog(commands.Cog, name='\nRagnarok Commands'):
         self.savefile = read_json('ragnarok.json')
         self.stats = self.savefile["ids"]
         self.job = self.savefile["job_change"]
+        self.db = bot.mongodb.ragnarok.players
 
     """
         Commands ==========================================================
@@ -191,7 +192,7 @@ class RagnaCog(commands.Cog, name='\nRagnarok Commands'):
         self.update_json()
 
     """
-     Listeners ==========================================================
+        Listeners ==========================================================
     """
 
     @commands.Cog.listener()
@@ -281,6 +282,27 @@ class RagnaCog(commands.Cog, name='\nRagnarok Commands'):
         else:
             await message.channel.send("You're strong! You should register yourself to the adventurer's guild!")
             return True
+
+    # async def exp_increase(self, message):
+    #     player = self.db.find_one({'id': message.author.id})
+    #     if not player:
+    #         exp = player["exp"]
+    #         name = player["name"]
+    #         exp_gained = 2000
+    #         player["exp"] += exp_gained
+    #         await message.channel.send('{} gained {} Exp!'.format(name, exp_gained))
+    #         level = player["level"]
+    #         exp_cap = self.savefile["exp"][str(level)]
+    #         if exp > exp_cap:
+    #             player["exp"] = abs(int(exp_cap - exp))
+    #             player["level"] += 1
+    #             await message.channel.send("You leveled up!")
+    #         self.update_json()
+    #         print(player["exp"])
+    #         return True
+    #     else:
+    #         await message.channel.send("You're strong! You should register yourself to the adventurer's guild!")
+    #         return True
 
     async def exp_decrease(self, message):
         try:

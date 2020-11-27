@@ -5,19 +5,16 @@ import random
 import discord
 import asyncio
 import requests
-import pymongo
+import base64
+import ezgmail
+
 from PIL import Image
-from pymongo import MongoClient
 from discord.ext import commands
 from dotenv import load_dotenv
 from asyncio import *
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
 
 dict_file = "files/txt/de_en.txt"
-
-load_dotenv()
-TKN_MONGODB = os.getenv('MONGO_DB')
-client = MongoClient(TKN_MONGODB)
 
 
 def search_dict(keyword):
@@ -77,12 +74,12 @@ async def network_get(url, session):
         return True
 
 
-
 class AppsCog(commands.Cog, name='\nOther Application Commands'):
 
     def __init__(self, bot):
         self.bot = bot
-        self.db = client.horoscope.sign
+        self.db_tarot = bot.mongodb.horoscope.tarot
+        self.db = bot.mongodb.horoscope.sign
         self.savefile = self.db.find()[0]
 
     @commands.command(help='translates german words to english')
@@ -123,12 +120,13 @@ class AppsCog(commands.Cog, name='\nOther Application Commands'):
                 emojis = {"\U0001f411": "aries", "\U0001f402": "taurus", "\U0001f46f": "gemini",
                           "\U0001f980": "cancer", "\U0001f981": "leo", "\U0001f469": "virgo",
                           "\U00002696": "libra", "\U0001f982": "scorpio", "\U0001f3f9": "sagittarius",
-                          "\U0001f410": "capricorn", "\U0001f964" : "aquarius", "\U0001f38f": "pisces"}
+                          "\U0001f410": "capricorn", "\U0001f964": "aquarius", "\U0001f38f": "pisces"}
                 for key, val in emojis.items():
                     await message.add_reaction(key)
 
                 def check(reac, usr):
                     return usr == ctx.author and str(reac.emoji) is not None
+
                 try:
                     reaction, usr = await self.bot.wait_for('reaction_add', timeout=20.0, check=check)
                 except asyncio.TimeoutError:
@@ -147,11 +145,10 @@ class AppsCog(commands.Cog, name='\nOther Application Commands'):
         embed.set_image(url='attachment://{}'.format(f'{sign}.jpg'))
         await ctx.send(file=file, embed=embed)
 
-
     @commands.command(help='ramalan / tarotmu hari ini')
     async def tarot(self, ctx, sign=None):
-        db = client.horoscope.tarot
-        random_card = random.randint(0, db.estimated_document_count()-1)
+        db = self.db_tarot
+        random_card = random.randint(0, db.estimated_document_count() - 1)
         random_side = random.choice(['upright', 'reverse'])
         file = db.find()[random_card]
         if sign is None:
@@ -163,7 +160,7 @@ class AppsCog(commands.Cog, name='\nOther Application Commands'):
                     sign = i
         title = f'{file["name"].upper()}'
         try:
-            txt = file['content'][random_side][sign].replace(r"\xe2\x80\x99", "'").replace(';', '')\
+            txt = file['content'][random_side][sign].replace(r"\xe2\x80\x99", "'").replace(';', '') \
                 .replace(r"\xe2\x80\x9c", '"').replace(r"\xe2\x80\x9d", '"')
         except KeyError:
             await ctx.send("Please specify either of these choices: 'love', 'health', 'money', 'spirit'")
@@ -179,8 +176,28 @@ class AppsCog(commands.Cog, name='\nOther Application Commands'):
         embed.set_image(url='attachment://{}'.format(f'{file["name"].replace(" ", "-")}.jpg'))
         await ctx.send(embed=embed, file=img_file)
 
+    @commands.command()
+    async def steam_code(self, ctx):
+        error_msg = "Belum sampe atau error, coba lgi ntar"
+        for tries in range(3):
+            try:
+                unreadThreads = ezgmail.unread()
+                msg = unreadThreads[0].messages[0].body
+                msg = msg.split("This")[0].split(":")[-1].split()[0]
+                if len(msg) == 5:
+                    msg = f"Kodenya: {msg}"
+                else:
+                    msg = error_msg
+                break
+            except IndexError:
+                if tries == 2:
+                    break
+                message = await ctx.send(f"Ga ada email baru, nunggu bentar.. ({tries})")
+                await asyncio.sleep(30)
+                await message.delete()
+                msg = error_msg
+        await ctx.send(msg)
+
 
 def setup(bot):
     bot.add_cog(AppsCog(bot))
-
-
