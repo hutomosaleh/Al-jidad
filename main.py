@@ -3,11 +3,15 @@ import discord
 
 from discord.ext import commands
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')  # environment variables
+TKN_MONGODB = os.getenv('MONGO_DB')
+client = MongoClient(TKN_MONGODB)
 
 bot = commands.Bot(command_prefix=['oi ', 'Oi ', 'OI ', 'jid '])
+bot.mongodb = client
 
 startup_extensions = ['cogs.simple', 'cogs.ragnarok', 'cogs.pokemon', 'cogs.apps', 'cogs.podomoro']
 
