@@ -99,7 +99,7 @@ ffmpeg_options = {
 nama_belakang = {'<@163320354662514688>': 'Kusuma Wardhani', '<@690190849182924859>': 'Tandya', '<@690210811003666435>': 'Muliawan',
                  '<@690190783952715851>': 'Halim', '<@149466509926727682>': 'Angdjaja',
                  '<@691671675812708364>': 'Setiawan', '<@690209627907948612>': 'Muliawan',
-                 '<@325596713358458891>': 'Saleh', '<@450770327686086656>': 'Agustin'}
+                 '<@325596713358458891>': 'Saleh', '<@450770327686086656>': 'Agustin', '<@870607092258586634>': 'Pradana'}
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
